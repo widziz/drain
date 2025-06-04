@@ -1,11 +1,8 @@
-import asyncio
 import os
-
 from fastapi import FastAPI, Request
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from dotenv import load_dotenv
-
 from handlers import router
 
 # Load environment variables
@@ -40,5 +37,4 @@ async def webhook_handler(request: Request):
 @app.get("/")
 async def root():
     return {"status": "бот запущен"}
-
 
