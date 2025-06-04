@@ -1,33 +1,31 @@
-
 import os
-from aiogram import Bot, Dispatcher, types
-from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler
-from fastapi import FastAPI
-from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+from aiogram.types import Update
+from bot import bot, dp
+import asyncio
+import logging
 
-load_dotenv()
+import handlers  # подключаем обработчики
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET_TOKEN")
-WEBHOOK_BASE = os.getenv("WEBHOOK_BASE")
-
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
-dp = Dispatcher(storage=MemoryStorage())
-
-@dp.message(lambda message: message.text == "/start")
-async def start_cmd(message: types.Message):
-    await message.answer("Добро пожаловать в бизнес-бота!")
-
-@dp.message(lambda message: message.text == ".hi")
-async def hi_cmd(message: types.Message):
-    await message.answer("Привет! Это бизнес-бот.")
+WEBHOOK_SECRET = "d50ef92a7c4d3bad7c453a3610e06869"
+WEBHOOK_PATH = f"/webhook/{WEBHOOK_SECRET}"
 
 app = FastAPI()
 
-SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=f"/webhook/{WEBHOOK_SECRET}")
-
 @app.on_event("startup")
 async def on_startup():
-    await bot.set_webhook(f"{WEBHOOK_BASE}/webhook/{WEBHOOK_SECRET}")
+    # Устанавливаем вебхук Telegram
+    webhook_url = f"https://drain-5mb6.onrender.com{WEBHOOK_PATH}"
+    await bot.set_webhook(webhook_url)
+    logging.info(f"Webhook установлен: {webhook_url}")
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await bot.session.close()
+
+@app.post(WEBHOOK_PATH)
+async def webhook_handler(request: Request):
+    data = await request.json()
+    update = Update.model_validate(data)
+    await dp.feed_update(bot, update)
+    return {"status": "ok"}
