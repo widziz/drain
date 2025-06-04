@@ -1,31 +1,30 @@
-import os
+import logging
 from fastapi import FastAPI, Request
 from aiogram.types import Update
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+
 from bot import bot, dp
-import asyncio
-import logging
-
-import handlers  # подключаем обработчики
-
-WEBHOOK_SECRET = "d50ef92a7c4d3bad7c453a3610e06869"
-WEBHOOK_PATH = f"/webhook/{WEBHOOK_SECRET}"
+import handlers  # noqa: F401 — импортируем для регистрации хендлеров
+from config import WEBHOOK_PATH, WEBHOOK_URL
 
 app = FastAPI()
 
+# Webhook обработка
+@app.post(WEBHOOK_PATH)
+async def telegram_webhook(request: Request):
+    body = await request.json()
+    update = Update.model_validate(body)
+    await dp.feed_update(bot, update)
+    return {"ok": True}
+
+# Установка webhook при запуске
 @app.on_event("startup")
 async def on_startup():
-    # Устанавливаем вебхук Telegram
-    webhook_url = f"https://drain-5mb6.onrender.com{WEBHOOK_PATH}"
-    await bot.set_webhook(webhook_url)
-    logging.info(f"Webhook установлен: {webhook_url}")
+    logging.warning("Устанавливаю webhook...")
+    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_PATH.split("/")[-1])
 
+# Удаление webhook при завершении
 @app.on_event("shutdown")
 async def on_shutdown():
+    await bot.delete_webhook()
     await bot.session.close()
-
-@app.post(WEBHOOK_PATH)
-async def webhook_handler(request: Request):
-    data = await request.json()
-    update = Update.model_validate(data)
-    await dp.feed_update(bot, update)
-    return {"status": "ok"}
