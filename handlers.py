@@ -1,5 +1,6 @@
 from aiogram import Router, Bot
-from aiogram.types import Update, BusinessConnectionUpdated, BusinessMessage
+from aiogram.types.business_connection import BusinessConnectionUpdated
+from aiogram.types.business_messages import BusinessMessage
 
 router = Router()
 
