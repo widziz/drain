@@ -1,9 +1,7 @@
 import uvicorn
-import asyncio
 from app.webhook import app
 from app.bot import ensure_webhook
 
-# Установка вебхука при старте
 @app.on_event("startup")
 async def on_startup():
     await ensure_webhook()
