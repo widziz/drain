@@ -12,4 +12,4 @@ async def business_handler(message: Message):
 
 @router.message()
 async def fallback_handler(message: Message):
-    await message.answer("Это обычный бот. Напишите в бизнес-аккаунт, чтобы получить бизнес-ответ.")
+    await message.answer("Это обычный бот. Напишите нам через бизнес-аккаунт!")
