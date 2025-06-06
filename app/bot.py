@@ -1,11 +1,11 @@
-from aiogram import Router, F
-from aiogram.types import Message
+import os
+from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 
-router = Router()
+load_dotenv()
 
-@router.message(F.business_connection_id)
-async def business_handler(message: Message):
-    await message.answer(
-        text="Привет, это бизнес чат-бот!",
-        business_connection_id=message.business_connection_id
-    )
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(storage=MemoryStorage())
