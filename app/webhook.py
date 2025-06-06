@@ -10,6 +10,10 @@ dp.include_router(business_router)
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
 @app.post("/webhook/{secret}")
 async def telegram_webhook(secret: str, request: Request):
     if secret != WEBHOOK_SECRET:
