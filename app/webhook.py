@@ -19,7 +19,12 @@ async def telegram_webhook(secret: str, request: Request):
     if secret != WEBHOOK_SECRET:
         raise HTTPException(status_code=403, detail="Invalid webhook secret")
 
-    data = await request.json()
-    update = Update.model_validate(data, strict=False)
-    await dp.feed_update(bot, update)
+    try:
+        data = await request.json()
+        update = Update.model_validate(data, strict=False)
+        await dp.feed_update(bot, update)
+    except Exception as e:
+        print(f"❌ Webhook error: {e}")
+        raise HTTPException(status_code=500, detail="Webhook failed")
+
     return {"ok": True}
