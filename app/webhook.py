@@ -1,17 +1,24 @@
 from fastapi import FastAPI, Request, HTTPException
+from contextlib import asynccontextmanager
 from aiogram.types import Update
-from app.bot import bot, dp
+from app.bot import bot, dp, ensure_webhook
 from app.business import router as business_router
 from app.handlers import router as default_router
-
 import os
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
-app = FastAPI()
-
 dp.include_router(business_router)
 dp.include_router(default_router)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await ensure_webhook()
+    yield
+    await bot.session.close()
+    print("✅ Bot session closed")
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 async def root():
@@ -31,11 +38,6 @@ async def telegram_webhook(secret: str, request: Request):
         print(f"❌ Webhook error: {e}")
         raise HTTPException(status_code=500, detail="Webhook failed")
 
-    return {"ok": True}
-
-@app.on_event("shutdown")
-async def shutdown():
-    await bot.session.close()
-    print("✅ Bot session closed")
+    return {"ok": True"}
 
 
