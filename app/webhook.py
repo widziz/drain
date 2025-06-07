@@ -18,6 +18,9 @@ async def root():
     return {"status": "ok"}
 
 @app.post("/webhook/{secret}")
+
+print("🛎️ Received update:", data)
+
 async def telegram_webhook(secret: str, request: Request):
     if secret != WEBHOOK_SECRET:
         raise HTTPException(status_code=403, detail="Invalid webhook secret")
